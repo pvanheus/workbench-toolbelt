@@ -1,13 +1,13 @@
 import os
 import subprocess
 import urllib
-import yaml
-
 import click
+
 from decouple import config
 from github import Github, GithubException
 from loguru import logger
 from tqdm.auto import tqdm
+from lib.tools import read_from_plugins
 
 CONTEXT_SETTINGS = dict(
     default_map={
@@ -97,11 +97,11 @@ def download_jar(illumina_version, nanopore_version, access_token):
 
                 ensure_dir(file_name)
                 with tqdm.wrapattr(
-                    open(file_name, "wb"),
-                    "write",
-                    miniters=1,
-                    desc=asset.browser_download_url.split("/")[-1],
-                    total=getattr(response, "length", None),
+                        open(file_name, "wb"),
+                        "write",
+                        miniters=1,
+                        desc=asset.browser_download_url.split("/")[-1],
+                        total=getattr(response, "length", None),
                 ) as fout:
                     for chunk in response:
                         fout.write(chunk)
@@ -207,14 +207,7 @@ def install_tools(galaxy, user, password, api_key):
     This command installs the tools in galaxy
     """
     logger.info("Make the singularity magic happen")
-    file_names = [
-        f
-        for f in os.listdir(PATH_TO_PLUGINS)
-        if os.path.isfile(os.path.join(PATH_TO_PLUGINS, f))
-    ]
-
-    tool_files = [get_fullpath_for_tool_yaml(f) for f in file_names]
-    plugins_tools = [read_tool_set_file(file) for file in tool_files]
+    plugins_tools = read_from_plugins(PATH_TO_PLUGINS)
 
     # run the ephemiris tool to install tools
     for tools in plugins_tools:
@@ -230,25 +223,13 @@ def install_tools(galaxy, user, password, api_key):
                 logger.error(f"Error, while trying to install {t['name']}")
                 raise click.ClickException(f"Something went wrong: {repr(e)}")
 
-
-def get_fullpath_for_tool_yaml(file):
-    """path to the tool yaml file"""
-    base_dir = os.path.join(
-        PATH_TO_PLUGINS, os.path.join(file + ".contents", "workflows/")
-    )
-    dirs = os.walk(base_dir)
-    dd = [dir_names for dir_names in sorted(dirs)]
-    return os.path.join(dd[-1][0], "tools.yaml")
-
-
-def read_tool_set_file(tool_file):
+@workbench.command()
+def build_images():
     """
-    Read the tool.yaml file
+    Build Singularity Images from a Galaxy Workflow file.
+    :return: status
     """
-    with open(tool_file) as file:
-        # The FullLoader parameter handles the conversion from YAML
-        # scalar values to Python the dictionary format
-        return [t for t in yaml.load(file, Loader=yaml.FullLoader)["tools"]]
+
 
 
 @workbench.command()
