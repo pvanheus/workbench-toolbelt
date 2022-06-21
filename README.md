@@ -1,4 +1,4 @@
-# Workbench-toolbelt
+# Workbench-Toolbelt
 Irida/Galaxy workbench related tasks automated. Galaxy &amp; Irida server, management cli toolset
 
 <div id="top"></div>
