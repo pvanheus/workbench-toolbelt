@@ -1,5 +1,6 @@
 import yaml, os
 import sys
+# from toolshed import complete_metadata
 
 this = sys.modules[__name__]
 
@@ -34,18 +35,5 @@ def read_tool_set_file(tool_file):
         # scalar values to Python the dictionary format
         return [t for t in yaml.load(file, Loader=yaml.FullLoader)["tools"]]
 
-def toolshed_meta(result):
-    for dictionary in result:
-        if 'valid_tools' in dictionary:
-            spec_strs = []
-            # this dict contains a list of installable tools
-            for tool in dictionary['valid_tools']:
-                print(tool['id'])
-                for requirement in tool['requirements']:
-                    if 'version' in requirement:
-                        spec_str = f'{requirement["name"]}=={requirement["version"]}'
-                        spec_strs.append(spec_str)
-                        print(spec_str)
-                    else:
-                        print(f'unversioned {requirement["name"]}', file=sys.stderr)
-            print(','.join(spec_strs))
+# def toolshed_meta(result):
+#     complete_metadata()

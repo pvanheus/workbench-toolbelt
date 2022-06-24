@@ -8,6 +8,7 @@ from github import Github, GithubException
 from loguru import logger
 from tqdm.auto import tqdm
 from lib.tools import read_from_plugins
+from lib.toolshed import complete_metadata
 
 CONTEXT_SETTINGS = dict(
     default_map={
@@ -229,7 +230,16 @@ def build_images():
     Build Singularity Images from a Galaxy Workflow file.
     :return: status
     """
-
+    ensure_dir(PATH_TO_PLUGINS)
+    tool_list = read_from_plugins(PATH_TO_PLUGINS)
+    for tools in tool_list:
+        for t in tools:
+            try:
+                data = complete_metadata(t)
+                print(data)
+            except Exception as e:
+                logger.error(f"Error, while trying to build image for tool {t['name']}")
+                raise click.ClickException(f"Something went wrong: {repr(e)}")
 
 
 @workbench.command()
